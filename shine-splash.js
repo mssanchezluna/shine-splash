@@ -37,7 +37,9 @@ st.textContent =
   '#shine-lab .sh-texto > div{display:block;width:max-content;white-space:nowrap;margin-left:auto;margin-right:auto}' +
   '#shine-lab .sh-titulo{letter-spacing:-.045em;font-weight:normal}' +
   '#shine-lab .sh-fito{margin-top:.3em;letter-spacing:.01em}' +
+  '#shine-lab .sh-p{letter-spacing:-.09em}' +   // menos aire entre la P y la A
   '#shine-lab .sh-linea{margin-top:.7em;letter-spacing:.02em}' +
+  '#shine-lab .sh-linea2{margin-top:.45em}' +
   '#shine-lab .sh-firma{margin-top:1.6em;letter-spacing:.02em}' +
   '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%}' +
   '#shine-lab .sh-pista{position:absolute;left:0;right:0;bottom:9vh;text-align:center;z-index:2;pointer-events:none;opacity:0;' +
@@ -58,12 +60,12 @@ document.head.appendChild(st);
 var raiz = document.createElement('div');
 raiz.id = 'shine-lab';
 raiz.setAttribute('role', 'group');
-raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Mejor disco de rock Latin Grammy 2026. Gracias');
-raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITOPAEZ</div><div class="sh-linea">Mejor disco de rock Latin Grammy 2026</div><div class="sh-firma">Gracias</div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Pulsá para entrar</button>';
+raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Mejor disco de rock Latin Grammy 2026. Best Latin Rock or Alternative Album Nominee, Grammys 2026. Gracias');
+raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITO<span class="sh-p">P</span>AEZ</div><div class="sh-linea">Mejor disco de rock Latin Grammy 2026</div><div class="sh-linea sh-linea2">Best Latin Rock or Alternative Album Nominee Grammys 2026</div><div class="sh-firma">Gracias</div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Pulsá para entrar</button>';
 document.body.appendChild(raiz);        // encima de todo el sitio
 document.documentElement.style.overflow = 'hidden';
 var texto = raiz.querySelector('.sh-texto');
-var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), linea = raiz.querySelector('.sh-linea'), firma = raiz.querySelector('.sh-firma');
+var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), linea = raiz.querySelector('.sh-linea'), linea2 = raiz.querySelector('.sh-linea2'), firma = raiz.querySelector('.sh-firma');
 var lienzo = document.createElement('canvas');
 raiz.insertBefore(lienzo, raiz.firstChild);
 var c = lienzo.getContext('2d');
@@ -119,9 +121,9 @@ function ajustar(escala) {
   fito.style.fontSize = Math.max(16, fs * 0.18) + 'px';
   // la línea del premio y «Gracias»: más chicas, sin pasar el ancho de SHINE
   var fl = Math.max(11, fs * 0.07);
-  linea.style.fontSize = fl + 'px';
-  var al = linea.getBoundingClientRect().width;
-  if (al > anchoTitulo) { fl = Math.max(11, fl * anchoTitulo / al); linea.style.fontSize = fl + 'px'; }
+  linea.style.fontSize = linea2.style.fontSize = fl + 'px';
+  var al = Math.max(linea.getBoundingClientRect().width, linea2.getBoundingClientRect().width);
+  if (al > anchoTitulo) { fl = Math.max(9, fl * anchoTitulo / al); linea.style.fontSize = linea2.style.fontSize = fl + 'px'; }
   firma.style.fontSize = fl + 'px';
   // el texto va centrado y deja libre abajo la franja del botón: si no entra, se achica todo
   if (escala === 1) {
@@ -189,9 +191,12 @@ function armar() {
       if (nVistos >= n * UMBRAL) completar();
     }
     cx.clearRect(0, 0, W, H); cx.textAlign = 'center'; cx.textBaseline = 'alphabetic';
+    // antes de descubrir el mensaje, FITOPAEZ respira apenas en la oscuridad, como invitando a pasar la luz
+    var respiro = completo ? 0 : 0.07 + Math.sin(reloj * 1.3) * 0.05;
     for (var k = 0; k < n; k++) {
-      if (carga[k] < 0.01) continue;
-      var gg = glifos[k], a = carga[k] * gg.alfa;
+      var gg = glifos[k], cg = gg.respira ? Math.max(carga[k], respiro) : carga[k];
+      if (cg < 0.01) continue;
+      var a = cg * gg.alfa;
       cx.font = gg.estilo + gg.tam + 'px ' + FUENTE;
       cx.fillStyle = 'rgba(' + Math.round(170 + a * 50) + ',255,' + Math.round(150 + a * 40) + ',' + Math.min(1, a * 1.2) + ')';
       if (gg.espejo) { cx.save(); cx.translate(gg.x, gg.y); cx.scale(-1, 1); cx.fillText(gg.ch, 0, 0); cx.restore(); }

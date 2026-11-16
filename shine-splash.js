@@ -39,11 +39,11 @@ st.textContent =
   '#shine-lab .sh-fito{margin-top:.3em;letter-spacing:.01em}' +
   '#shine-lab .sh-p{letter-spacing:-.09em}' +   // menos aire entre la P y la A
   // los dos premios, lado a lado en dos columnas
-  '#shine-lab .sh-texto > .sh-premios{display:flex;align-items:flex-start;justify-content:center;gap:2.6em;margin-top:.9em}' +
+  '#shine-lab .sh-texto > .sh-premios{display:flex;align-items:flex-start;justify-content:center;gap:2.6em;margin-top:1.3em}' +
   '#shine-lab .sh-col{text-align:center;letter-spacing:.02em}' +
   '#shine-lab .sh-col > div{white-space:nowrap;margin-top:.45em}' +
   '#shine-lab .sh-col > .sh-rotulo{margin-top:0;margin-bottom:.3em}' +
-  '#shine-lab .sh-logo{display:block}' +
+  '#shine-lab .sh-col > .sh-logo{display:block;margin:0 auto .55em}' +   // un gramófono arriba de cada columna
   '#shine-lab .sh-firma{margin-top:1.6em;letter-spacing:.02em}' +
   '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}' +
   // el resplandor lo desenfoca el navegador (CSS), igual en Chrome, Safari, iPhone y Android
@@ -57,8 +57,11 @@ st.textContent =
   '#shine-lab .sh-entrar{all:unset;box-sizing:border-box;position:absolute;left:50%;bottom:9vh;transform:translateX(-50%);z-index:2;cursor:pointer;white-space:nowrap;' +
   'font-family:' + FUENTE + ';font-size:clamp(11px,1vw,13px);letter-spacing:.06em;text-transform:uppercase;color:#e6ffd9;font-weight:bold;' +
   'text-shadow:0 0 8px rgba(170,255,150,.9),0 0 24px rgba(170,255,150,.6);padding:.8em 1.4em;' +
-  'border:1px solid rgba(190,255,170,.55);border-radius:99px;visibility:hidden;opacity:0;transition:opacity .6s ease .9s,visibility 0s linear .9s}' +
+  'border:0;border-radius:99px;visibility:hidden;opacity:0;transition:opacity .6s ease .9s,visibility 0s linear .9s}' +
   '#shine-lab .sh-entrar:focus-visible{outline:2px solid #e6ffd9;outline-offset:4px}' +
+  // con mouse, el botón se rellena al pasar por encima
+  '@media (hover:hover){#shine-lab .sh-entrar{transition:opacity .6s ease .9s,visibility 0s linear .9s,background-color .25s ease,color .25s ease,box-shadow .25s ease}' +
+  '#shine-lab.sh-completo .sh-entrar:hover{background:#e6ffd9;color:' + OSCURO + ';text-shadow:none;box-shadow:0 0 22px rgba(190,255,170,.55);animation:none;opacity:1}}' +
   '#shine-lab.sh-completo .sh-entrar{visibility:visible;opacity:1;animation:sh-late 2.4s ease-in-out 1.6s infinite}' +
   '@keyframes sh-late{0%,100%{opacity:.7}50%{opacity:1}}' +
   '@media (prefers-reduced-motion:reduce){#shine-lab{transition:none}#shine-lab.sh-completo .sh-entrar{animation:none}#shine-lab.sh-pista-on .sh-pista{animation:none;opacity:.5}}';
@@ -67,11 +70,11 @@ document.head.appendChild(st);
 var raiz = document.createElement('div');
 raiz.id = 'shine-lab';
 raiz.setAttribute('role', 'group');
-raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Ganador: Mejor disco de rock, Latin Grammy 2026. Nominado: Best Latin Rock or Alternative Album, Grammys 2026. Gracias');
-raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITO<span class="sh-p">P</span>AEZ</div><div class="sh-logo"></div><div class="sh-premios"><div class="sh-col"><div class="sh-rotulo">Ganador</div><div>Mejor disco de rock</div><div>Latin Grammy 2026</div></div><div class="sh-col"><div class="sh-rotulo">Nominee</div><div>Best Latin Rock or</div><div>Alternative Album</div><div>Grammys 2026</div></div></div><div class="sh-firma">Gracias</div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Pulsá para entrar</button>';
+raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Ganador: Mejor disco de rock, Latin Grammy 2026. Nominado: Best Latin Rock, Grammys 2027.');
+raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITO<span class="sh-p">P</span>AEZ</div><div class="sh-premios"><div class="sh-col"><div class="sh-logo"></div><div class="sh-rotulo">Ganador</div><div>Mejor disco de rock</div><div>Latin Grammy 2026</div></div><div class="sh-col"><div class="sh-logo"></div><div class="sh-rotulo">Nominee</div><div>Best Latin Rock</div><div>Grammys 2027</div></div></div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Entrar</button>';
 document.body.appendChild(raiz);        // encima de todo el sitio
 document.documentElement.style.overflow = 'hidden';
-var texto = raiz.querySelector('.sh-texto'), logo = raiz.querySelector('.sh-logo');
+var texto = raiz.querySelector('.sh-texto'), logos = [].slice.call(raiz.querySelectorAll('.sh-logo'));
 // logo de los Grammy (gramófono), dibujado en el lienzo como una letra más
 var LOGO = new Path2D('M66.9,60.63c0-1.13-7.23-2.05-16.15-2.05s-16.15.92-16.15,2.05v3.42c0,1.13,7.24,2.04,16.15,2.04s16.14-.91,16.15-2.04C66.9,64.05,66.9,60.63,66.9,60.63ZM46.1,3.27H46.1c-1.1-.6-2.49-.66-4.12-.18-5.4,1.6-12.08,8.5-17.03,17.6-4.94,9.1-7.11,18.46-5.52,23.86.48,1.63,1.28,2.76,2.39,3.36,1.1.6,2.49.66,4.12.18,5.4-1.6,12.08-8.5,17.03-17.59,6.58-12.1,8.01-24.57,3.13-27.22M69.81,40.57c-8.32-6.32-14.26-12.41-19.39-20.15-1.05,3.7-2.67,7.68-4.85,11.7-2.12,3.9-4.58,7.43-7.14,10.35,4.66.02,9.07.33,13.58,1.01,5.52.82,10.71,1.73,14.46,3.67,1.24.64,2.31,1.56,3.16,2.65l-16.49,2.34c-.53-.91-1.39-1.51-2.37-1.51-1.6,0-2.91,1.6-2.91,3.57s1.3,3.57,2.91,3.57c1.15,0,2.14-.83,2.61-2.02l17.91-2.54c.17.68.28,1.39.28,2.13,0,2.4-.9,4.59-2.37,6.26l6.87.97c1.15-2.16,1.8-4.62,1.8-7.23,0-6.96-2.72-10.71-8.05-14.77M75.62,66.13l-24.88,3.52-24.88-3.52v19.33l24.9,4.99,24.86-4.99S75.62,66.13,75.62,66.13ZM50.76,123.36L3.77,113.11l13.88-25.65,33.09,6.08,33.1-6.08,13.88,25.65-46.95,10.25H50.76Z'), LOGO_W = 101.49, LOGO_H = 126.13;
 var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), premios = raiz.querySelector('.sh-premios'), firma = raiz.querySelector('.sh-firma');
@@ -135,10 +138,9 @@ function ajustar(escala) {
   premios.style.fontSize = fl + 'px';
   var al = premios.getBoundingClientRect().width;
   if (al > anchoTitulo) { fl = Math.max(9, fl * anchoTitulo / al); premios.style.fontSize = fl + 'px'; }
-  firma.style.fontSize = fl + 'px';
   // el gramófono, antes de las líneas de los premios
   var lh = fl * 2.6;
-  logo.style.height = lh + 'px'; logo.style.width = (lh * LOGO_W / LOGO_H) + 'px'; logo.style.marginTop = (fl * 1.4) + 'px';
+  logos.forEach(function(lg) { lg.style.height = lh + 'px'; lg.style.width = (lh * LOGO_W / LOGO_H) + 'px'; });
   // el texto va centrado y deja libre abajo la franja del botón: si no entra, se achica todo
   if (escala === 1) {
     var libre = h - 2 * (h * 0.09 + 64), alto = texto.getBoundingClientRect().height;
@@ -171,8 +173,10 @@ function medir() {
       glifos.push({ ch: ch, x: b.left + (b.width - ls) / 2, y: b.top + asc, tam: tam, estilo: estilo, alfa: alfa, espejo: enTitulo && ch === 'N', respira: enFito, titulo: enTitulo });   // la N de SHINE, espejada
     }
   }
-  var lr = logo.getBoundingClientRect();
-  if (lr.height) glifos.push({ logo: true, x: lr.left + lr.width / 2, y: lr.top + lr.height * 0.85, tam: lr.height, alfa: 1 });
+  logos.forEach(function(lg) {
+    var lr = lg.getBoundingClientRect();
+    if (lr.height) glifos.push({ logo: true, x: lr.left + lr.width / 2, y: lr.top + lr.height * 0.85, tam: lr.height, alfa: 1 });
+  });
   if (!carga || carga.length !== glifos.length) {
     carga = new Float32Array(glifos.length); visto = new Uint8Array(glifos.length); nVistos = 0;
   }

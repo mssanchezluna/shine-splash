@@ -35,7 +35,7 @@ st.textContent =
   'color:#210e0e;font-family:' + FUENTE + ';font-weight:bold;text-transform:uppercase;' +
   'line-height:1;visibility:hidden;-webkit-user-select:none;user-select:none}' +
   '#shine-lab .sh-texto > div{display:block;width:max-content;white-space:nowrap;margin-left:auto;margin-right:auto}' +
-  '#shine-lab .sh-titulo{letter-spacing:-.045em}' +
+  '#shine-lab .sh-titulo{letter-spacing:-.045em;font-weight:normal}' +
   '#shine-lab .sh-fito{margin-top:.3em;letter-spacing:.01em}' +
   '#shine-lab .sh-linea{margin-top:.7em;letter-spacing:.02em}' +
   '#shine-lab .sh-firma{margin-top:1.6em;letter-spacing:.02em}' +
@@ -43,7 +43,7 @@ st.textContent =
   '#shine-lab .sh-pista{position:absolute;left:0;right:0;bottom:9vh;text-align:center;z-index:2;pointer-events:none;opacity:0;' +
   'font-family:' + FUENTE + ';font-size:clamp(9px,.9vw,12px);font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:rgba(200,255,180,.8);text-shadow:0 0 8px rgba(170,255,150,.5)}' +
   '#shine-lab.sh-pista-on .sh-pista{animation:sh-titila 1.6s ease-in-out infinite}' +
-  '#shine-lab.sh-sinpista .sh-pista{animation:none;opacity:0;transition:opacity .6s ease}' +
+  '#shine-lab.sh-sinpista .sh-pista,#shine-lab.sh-completo .sh-pista{animation:none;opacity:0;transition:opacity .6s ease}' +
   '@keyframes sh-titila{0%,100%{opacity:.12}50%{opacity:.6}}' +
   '#shine-lab .sh-entrar{all:unset;box-sizing:border-box;position:absolute;left:50%;bottom:9vh;transform:translateX(-50%);z-index:2;cursor:pointer;white-space:nowrap;' +
   'font-family:' + FUENTE + ';font-size:clamp(11px,1vw,13px);letter-spacing:.06em;text-transform:uppercase;color:#e6ffd9;font-weight:bold;' +
@@ -107,11 +107,12 @@ setTimeout(function() { raiz.classList.add('sh-pista-on'); }, 700);
 function sinPista() { raiz.classList.add('sh-sinpista'); raiz.removeEventListener('pointermove', sinPista); raiz.removeEventListener('pointerdown', sinPista); }
 raiz.addEventListener('pointermove', sinPista); raiz.addEventListener('pointerdown', sinPista);
 
-function ajustar() {
+function ajustar(escala) {
   var w = raiz.clientWidth, h = raiz.clientHeight;
+  escala = escala || 1;
   titulo.style.fontSize = '100px';
   var fs = 100 * (w * ANCHO) / titulo.getBoundingClientRect().width;
-  fs = Math.min(fs, h * ALTO_TITULO);
+  fs = Math.min(fs, h * ALTO_TITULO) * escala;
   titulo.style.fontSize = fs + 'px';
   var anchoTitulo = titulo.getBoundingClientRect().width;
   // FITOPAEZ: grande, al 18 % del cuerpo de SHINE
@@ -122,11 +123,16 @@ function ajustar() {
   var al = linea.getBoundingClientRect().width;
   if (al > anchoTitulo) { fl = Math.max(11, fl * anchoTitulo / al); linea.style.fontSize = fl + 'px'; }
   firma.style.fontSize = fl + 'px';
+  // el texto va centrado y deja libre abajo la franja del botón: si no entra, se achica todo
+  if (escala === 1) {
+    var libre = h - 2 * (h * 0.09 + 64), alto = texto.getBoundingClientRect().height;
+    if (alto > libre && libre > 0) ajustar(Math.max(0.3, libre / alto));
+  }
 }
 
 function medir() {
   ajustar();
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  dpr = Math.min(window.devicePixelRatio || 1, 3);
   W = raiz.clientWidth; H = raiz.clientHeight;
   lienzo.width = W * dpr; lienzo.height = H * dpr;
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -134,7 +140,7 @@ function medir() {
   var rango = document.createRange(), recorrido = document.createTreeWalker(texto, NodeFilter.SHOW_TEXT), nodo;
   while ((nodo = recorrido.nextNode())) {
     var el = nodo.parentElement, cs = getComputedStyle(el), tam = parseFloat(cs.fontSize);
-    var estilo = (cs.fontStyle === 'italic' ? 'italic ' : '') + 'bold ';
+    var estilo = (cs.fontStyle === 'italic' ? 'italic ' : '') + (parseInt(cs.fontWeight, 10) >= 600 ? 'bold ' : '');
     var alfa = el.closest('.sh-firma') ? 0.85 : 1;
     var enTitulo = !!el.closest('.sh-titulo'), enFito = !!el.closest('.sh-fito');
     var ls = parseFloat(cs.letterSpacing) || 0, mayus = cs.textTransform === 'uppercase';
@@ -158,9 +164,11 @@ function armar() {
   var n = glifos.length;
   var capa = document.createElement('canvas'); capa.width = W * dpr; capa.height = H * dpr;
   var cx = capa.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // halos en copias reducidas (más livianas que desenfocar la pantalla entera), con resolución suficiente para que no se pixelen
   function reducida(f) { var k = document.createElement('canvas'); k.width = Math.max(1, Math.round(W / f)); k.height = Math.max(1, Math.round(H / f)); return k; }
-  var lejos = reducida(8), cerca = reducida(3), lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
-  lx.filter = 'blur(3px)'; nx.filter = 'blur(2px)';
+  var lejos = reducida(4), cerca = reducida(1.5), lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
+  lx.filter = 'blur(5px)'; nx.filter = 'blur(2.5px)';
+  lx.imageSmoothingQuality = nx.imageSmoothingQuality = c.imageSmoothingQuality = 'high';
   var reloj = 0;
   return function() {
     reloj += 1 / 60;

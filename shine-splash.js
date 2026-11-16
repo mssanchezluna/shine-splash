@@ -179,6 +179,16 @@ function armar() {
   var lejos = reducida(4), cerca = reducida(1.5), lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
   lx.filter = 'blur(5px)'; nx.filter = 'blur(2.5px)';
   lx.imageSmoothingQuality = nx.imageSmoothingQuality = c.imageSmoothingQuality = 'high';
+  // Safari (iPhone) no aplica «filter» en el lienzo: ahí el halo se arma achicando la imagen por pasos
+  // (cada paso la suaviza) y agrandándola de nuevo, que da un desenfoque parejo sin pixelado
+  var conFiltro = (function() {
+    var t = document.createElement('canvas'); t.width = t.height = 9; var x = t.getContext('2d');
+    if (!('filter' in x)) return false;
+    x.filter = 'blur(2px)'; x.fillRect(4, 4, 1, 1);
+    return x.getImageData(1, 4, 1, 1).data[3] > 0;
+  })();
+  var pasos = [];
+  if (!conFiltro) { for (var f = 2; f <= 16; f *= 2) { var kp = reducida(f); pasos.push(kp); kp.getContext('2d').imageSmoothingQuality = 'high'; } }
   // SHINE en peso «medium»: cada letra regular con un contorno fino, dibujada opaca en su propia imagen
   // y después aplicada con transparencia, así el contorno no se nota como una capa aparte
   var COLOR_SHINE = 'rgb(220,255,190)';
@@ -232,11 +242,18 @@ function armar() {
       l.addColorStop(0, 'rgba(150,120,255,.18)'); l.addColorStop(1, 'rgba(150,120,255,0)');
       c.fillStyle = l; c.fillRect(m.x - 160, m.y - 160, 320, 320);
     }
-    lx.clearRect(0, 0, lejos.width, lejos.height); lx.drawImage(capa, 0, 0, lejos.width, lejos.height);
-    nx.clearRect(0, 0, cerca.width, cerca.height); nx.drawImage(capa, 0, 0, cerca.width, cerca.height);
+    var hLejos = lejos, hCerca = cerca;
+    if (conFiltro) {
+      lx.clearRect(0, 0, lejos.width, lejos.height); lx.drawImage(capa, 0, 0, lejos.width, lejos.height);
+      nx.clearRect(0, 0, cerca.width, cerca.height); nx.drawImage(capa, 0, 0, cerca.width, cerca.height);
+    } else {
+      var previa = capa;
+      pasos.forEach(function(kp) { var kx2 = kp.getContext('2d'); kx2.clearRect(0, 0, kp.width, kp.height); kx2.drawImage(previa, 0, 0, kp.width, kp.height); previa = kp; });
+      hCerca = pasos[1]; hLejos = pasos[3];
+    }
     c.imageSmoothingEnabled = true;
-    c.globalAlpha = 0.7; c.drawImage(lejos, 0, 0, W, H);
-    c.globalAlpha = 0.9; c.drawImage(cerca, 0, 0, W, H);
+    c.globalAlpha = 0.7; c.drawImage(hLejos, 0, 0, W, H);
+    c.globalAlpha = conFiltro ? 0.9 : 0.6; c.drawImage(hCerca, 0, 0, W, H);
     c.globalAlpha = 1; c.drawImage(capa, 0, 0, W, H);
   };
 }

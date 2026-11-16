@@ -2,9 +2,10 @@
 if (window.top !== window) return;
 if (window.__shineSplash) return;
 window.__shineSplash = true;
+var DEMO = !!window.SHINE_DEMO;          // en la página de prueba se muestra siempre
 var p = location.pathname.replace(/\/+$/, '');
-if (p !== '' && p !== '/index.php') return;      // solo en la página de inicio
-try { if (sessionStorage.getItem('shineVisto')) return; } catch (e) {}
+if (!DEMO && p !== '' && p !== '/index.php') return;      // solo en la página de inicio
+try { if (!DEMO && sessionStorage.getItem('shineVisto')) return; } catch (e) {}
 
 var DESTINO = '';                       // vacío: al entrar se ve el sitio actual. Con una URL, lleva a esa página
 var UMBRAL = 0.96;                      // fracción de las letras que hay que descubrir (0 a 1)

@@ -42,7 +42,10 @@ st.textContent =
   '#shine-lab .sh-linea2{margin-top:.45em}' +
   '#shine-lab .sh-logo{display:block}' +
   '#shine-lab .sh-firma{margin-top:1.6em;letter-spacing:.02em}' +
-  '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%}' +
+  '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}' +
+  // el resplandor lo desenfoca el navegador (CSS), igual en Chrome, Safari, iPhone y Android
+  '#shine-lab .sh-lejos{filter:blur(16px);-webkit-filter:blur(16px);opacity:1;transform:translateZ(0)}' +
+  '#shine-lab .sh-cerca{filter:blur(5px);-webkit-filter:blur(5px);opacity:1;transform:translateZ(0)}' +
   '#shine-lab .sh-pista{position:absolute;left:0;right:0;bottom:9vh;text-align:center;z-index:2;pointer-events:none;opacity:0;' +
   'font-family:' + FUENTE + ';font-size:clamp(9px,.9vw,12px);font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:rgba(200,255,180,.8);text-shadow:0 0 8px rgba(170,255,150,.5)}' +
   '#shine-lab.sh-pista-on .sh-pista{animation:sh-titila 1.6s ease-in-out infinite}' +
@@ -69,8 +72,10 @@ var texto = raiz.querySelector('.sh-texto'), logo = raiz.querySelector('.sh-logo
 // logo de los Grammy (gramófono), dibujado en el lienzo como una letra más
 var LOGO = new Path2D('M66.9,60.63c0-1.13-7.23-2.05-16.15-2.05s-16.15.92-16.15,2.05v3.42c0,1.13,7.24,2.04,16.15,2.04s16.14-.91,16.15-2.04C66.9,64.05,66.9,60.63,66.9,60.63ZM46.1,3.27H46.1c-1.1-.6-2.49-.66-4.12-.18-5.4,1.6-12.08,8.5-17.03,17.6-4.94,9.1-7.11,18.46-5.52,23.86.48,1.63,1.28,2.76,2.39,3.36,1.1.6,2.49.66,4.12.18,5.4-1.6,12.08-8.5,17.03-17.59,6.58-12.1,8.01-24.57,3.13-27.22M69.81,40.57c-8.32-6.32-14.26-12.41-19.39-20.15-1.05,3.7-2.67,7.68-4.85,11.7-2.12,3.9-4.58,7.43-7.14,10.35,4.66.02,9.07.33,13.58,1.01,5.52.82,10.71,1.73,14.46,3.67,1.24.64,2.31,1.56,3.16,2.65l-16.49,2.34c-.53-.91-1.39-1.51-2.37-1.51-1.6,0-2.91,1.6-2.91,3.57s1.3,3.57,2.91,3.57c1.15,0,2.14-.83,2.61-2.02l17.91-2.54c.17.68.28,1.39.28,2.13,0,2.4-.9,4.59-2.37,6.26l6.87.97c1.15-2.16,1.8-4.62,1.8-7.23,0-6.96-2.72-10.71-8.05-14.77M75.62,66.13l-24.88,3.52-24.88-3.52v19.33l24.9,4.99,24.86-4.99S75.62,66.13,75.62,66.13ZM50.76,123.36L3.77,113.11l13.88-25.65,33.09,6.08,33.1-6.08,13.88,25.65-46.95,10.25H50.76Z'), LOGO_W = 101.49, LOGO_H = 126.13;
 var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), linea = raiz.querySelector('.sh-linea'), linea2 = raiz.querySelector('.sh-linea2'), firma = raiz.querySelector('.sh-firma');
-var lienzo = document.createElement('canvas');
-raiz.insertBefore(lienzo, raiz.firstChild);
+var lienzo = document.createElement('canvas');                 // fondo y luz del cursor
+var haloLejos = document.createElement('canvas'), haloCerca = document.createElement('canvas'), nitido = document.createElement('canvas');
+haloLejos.className = 'sh-lejos'; haloCerca.className = 'sh-cerca';
+[nitido, haloCerca, haloLejos, lienzo].forEach(function(k) { raiz.insertBefore(k, raiz.firstChild); });
 var c = lienzo.getContext('2d');
 
 var m = { x: -9999, y: -9999, adentro: false };
@@ -172,23 +177,14 @@ function medir() {
 
 function armar() {
   var n = glifos.length;
-  var capa = document.createElement('canvas'); capa.width = W * dpr; capa.height = H * dpr;
+  var capa = nitido; capa.width = W * dpr; capa.height = H * dpr;
   var cx = capa.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  // halos en copias reducidas (más livianas que desenfocar la pantalla entera), con resolución suficiente para que no se pixelen
-  function reducida(f) { var k = document.createElement('canvas'); k.width = Math.max(1, Math.round(W / f)); k.height = Math.max(1, Math.round(H / f)); return k; }
-  var lejos = reducida(4), cerca = reducida(1.5), lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
-  lx.filter = 'blur(5px)'; nx.filter = 'blur(2.5px)';
-  lx.imageSmoothingQuality = nx.imageSmoothingQuality = c.imageSmoothingQuality = 'high';
-  // Safari (iPhone) no aplica «filter» en el lienzo: ahí el halo se arma achicando la imagen por pasos
-  // (cada paso la suaviza) y agrandándola de nuevo, que da un desenfoque parejo sin pixelado
-  var conFiltro = (function() {
-    var t = document.createElement('canvas'); t.width = t.height = 9; var x = t.getContext('2d');
-    if (!('filter' in x)) return false;
-    x.filter = 'blur(2px)'; x.fillRect(4, 4, 1, 1);
-    return x.getImageData(1, 4, 1, 1).data[3] > 0;
-  })();
-  var pasos = [];
-  if (!conFiltro) { for (var f = 2; f <= 16; f *= 2) { var kp = reducida(f); pasos.push(kp); kp.getContext('2d').imageSmoothingQuality = 'high'; } }
+  // copias reducidas de las letras para el resplandor; el desenfoque lo pone el CSS de cada lienzo
+  var lejos = haloLejos, cerca = haloCerca;
+  lejos.width = Math.max(1, Math.round(W / 4)); lejos.height = Math.max(1, Math.round(H / 4));
+  cerca.width = Math.max(1, Math.round(W / 2)); cerca.height = Math.max(1, Math.round(H / 2));
+  var lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
+  lx.imageSmoothingQuality = nx.imageSmoothingQuality = 'high';
   // SHINE en peso «medium»: cada letra regular con un contorno fino, dibujada opaca en su propia imagen
   // y después aplicada con transparencia, así el contorno no se nota como una capa aparte
   var COLOR_SHINE = 'rgb(220,255,190)';
@@ -242,19 +238,8 @@ function armar() {
       l.addColorStop(0, 'rgba(150,120,255,.18)'); l.addColorStop(1, 'rgba(150,120,255,0)');
       c.fillStyle = l; c.fillRect(m.x - 160, m.y - 160, 320, 320);
     }
-    var hLejos = lejos, hCerca = cerca;
-    if (conFiltro) {
-      lx.clearRect(0, 0, lejos.width, lejos.height); lx.drawImage(capa, 0, 0, lejos.width, lejos.height);
-      nx.clearRect(0, 0, cerca.width, cerca.height); nx.drawImage(capa, 0, 0, cerca.width, cerca.height);
-    } else {
-      var previa = capa;
-      pasos.forEach(function(kp) { var kx2 = kp.getContext('2d'); kx2.clearRect(0, 0, kp.width, kp.height); kx2.drawImage(previa, 0, 0, kp.width, kp.height); previa = kp; });
-      hCerca = pasos[1]; hLejos = pasos[3];
-    }
-    c.imageSmoothingEnabled = true;
-    c.globalAlpha = 0.7; c.drawImage(hLejos, 0, 0, W, H);
-    c.globalAlpha = conFiltro ? 0.9 : 0.6; c.drawImage(hCerca, 0, 0, W, H);
-    c.globalAlpha = 1; c.drawImage(capa, 0, 0, W, H);
+    lx.clearRect(0, 0, lejos.width, lejos.height); lx.drawImage(capa, 0, 0, lejos.width, lejos.height);
+    nx.clearRect(0, 0, cerca.width, cerca.height); nx.drawImage(capa, 0, 0, cerca.width, cerca.height);
   };
 }
 

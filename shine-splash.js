@@ -160,7 +160,7 @@ function medir() {
       rango.setStart(nodo, i); rango.setEnd(nodo, i + 1);
       var rs = rango.getClientRects(); if (!rs.length) continue;
       var b = rs[0], asc = c.measureText(ch).fontBoundingBoxAscent || tam * 0.8;
-      glifos.push({ ch: ch, x: b.left + (b.width - ls) / 2, y: b.top + asc, tam: tam, estilo: estilo, alfa: alfa, espejo: enTitulo && ch === 'N', respira: enFito });   // la N de SHINE, espejada
+      glifos.push({ ch: ch, x: b.left + (b.width - ls) / 2, y: b.top + asc, tam: tam, estilo: estilo, alfa: alfa, espejo: enTitulo && ch === 'N', respira: enFito, titulo: enTitulo });   // la N de SHINE, espejada
     }
   }
   var lr = logo.getBoundingClientRect();
@@ -179,6 +179,20 @@ function armar() {
   var lejos = reducida(4), cerca = reducida(1.5), lx = lejos.getContext('2d'), nx = cerca.getContext('2d');
   lx.filter = 'blur(5px)'; nx.filter = 'blur(2.5px)';
   lx.imageSmoothingQuality = nx.imageSmoothingQuality = c.imageSmoothingQuality = 'high';
+  // SHINE en peso «medium»: cada letra regular con un contorno fino, dibujada opaca en su propia imagen
+  // y después aplicada con transparencia, así el contorno no se nota como una capa aparte
+  var COLOR_SHINE = 'rgb(220,255,190)';
+  glifos.forEach(function(g) {
+    if (!g.titulo) return;
+    var sw = Math.ceil(g.tam * 1.2), sh = Math.ceil(g.tam * 1.15), base = g.tam * 0.92;
+    var k = document.createElement('canvas'); k.width = Math.ceil(sw * dpr); k.height = Math.ceil(sh * dpr);
+    var kx = k.getContext('2d'); kx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    kx.font = g.estilo + g.tam + 'px ' + FUENTE; kx.textAlign = 'center'; kx.textBaseline = 'alphabetic';
+    kx.fillStyle = kx.strokeStyle = COLOR_SHINE; kx.lineWidth = g.tam * 0.032; kx.lineJoin = 'round';
+    kx.translate(sw / 2, base); if (g.espejo) kx.scale(-1, 1);
+    kx.fillText(g.ch, 0, 0); kx.strokeText(g.ch, 0, 0);
+    g.img = k; g.iw = sw; g.ih = sh; g.base = base;
+  });
   var reloj = 0;
   return function() {
     reloj += 1 / 60;
@@ -207,6 +221,7 @@ function armar() {
       var a = cg * gg.alfa;
       cx.font = gg.estilo + gg.tam + 'px ' + FUENTE;
       cx.fillStyle = 'rgba(' + Math.round(170 + a * 50) + ',255,' + Math.round(150 + a * 40) + ',' + Math.min(1, a * 1.2) + ')';
+      if (gg.img) { cx.globalAlpha = Math.min(1, a * 1.2); cx.drawImage(gg.img, gg.x - gg.iw / 2, gg.y - gg.base, gg.iw, gg.ih); cx.globalAlpha = 1; continue; }
       if (gg.logo) { var esc = gg.tam / LOGO_H; cx.save(); cx.translate(gg.x - LOGO_W * esc / 2, gg.y - gg.tam * 0.85); cx.scale(esc, esc); cx.fill(LOGO); cx.restore(); continue; }
       if (gg.espejo) { cx.save(); cx.translate(gg.x, gg.y); cx.scale(-1, 1); cx.fillText(gg.ch, 0, 0); cx.restore(); }
       else cx.fillText(gg.ch, gg.x, gg.y);

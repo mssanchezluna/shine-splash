@@ -33,7 +33,7 @@ st.textContent =
   'color:#210e0e;font-family:' + FUENTE + ';font-weight:normal;text-transform:uppercase;' +
   'line-height:1;visibility:hidden;-webkit-user-select:none;user-select:none}' +
   '#shine-lab .sh-texto > div{display:block;width:max-content;white-space:nowrap}' +
-  '#shine-lab .sh-titulo{letter-spacing:.02em}' +
+  '#shine-lab .sh-titulo{letter-spacing:-.045em}' +
   '#shine-lab .sh-linea{margin-top:.9em;letter-spacing:.06em}' +
   '#shine-lab .sh-firma{margin-top:2.2em;letter-spacing:.3em}' +
   '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%}' +
@@ -127,6 +127,7 @@ function medir() {
     var el = nodo.parentElement, cs = getComputedStyle(el), tam = parseFloat(cs.fontSize);
     var estilo = cs.fontStyle === 'italic' ? 'italic ' : '';
     var alfa = el.closest('.sh-firma') ? 0.85 : 1;
+    var enTitulo = !!el.closest('.sh-titulo');
     var ls = parseFloat(cs.letterSpacing) || 0, mayus = cs.textTransform === 'uppercase';
     c.font = estilo + tam + 'px ' + FUENTE;
     for (var i = 0; i < nodo.data.length; i++) {
@@ -136,7 +137,7 @@ function medir() {
       rango.setStart(nodo, i); rango.setEnd(nodo, i + 1);
       var rs = rango.getClientRects(); if (!rs.length) continue;
       var b = rs[0], asc = c.measureText(ch).fontBoundingBoxAscent || tam * 0.8;
-      glifos.push({ ch: ch, x: b.left + (b.width - ls) / 2, y: b.top + asc, tam: tam, estilo: estilo, alfa: alfa });
+      glifos.push({ ch: ch, x: b.left + (b.width - ls) / 2, y: b.top + asc, tam: tam, estilo: estilo, alfa: alfa, espejo: enTitulo && ch === 'N' });   // la N de SHINE, espejada
     }
   }
   if (!carga || carga.length !== glifos.length) {
@@ -173,7 +174,8 @@ function armar() {
       var gg = glifos[k], a = carga[k] * gg.alfa;
       cx.font = gg.estilo + gg.tam + 'px ' + FUENTE;
       cx.fillStyle = 'rgba(' + Math.round(170 + a * 50) + ',255,' + Math.round(150 + a * 40) + ',' + Math.min(1, a * 1.2) + ')';
-      cx.fillText(gg.ch, gg.x, gg.y);
+      if (gg.espejo) { cx.save(); cx.translate(gg.x, gg.y); cx.scale(-1, 1); cx.fillText(gg.ch, 0, 0); cx.restore(); }
+      else cx.fillText(gg.ch, gg.x, gg.y);
     }
     c.fillStyle = OSCURO; c.fillRect(0, 0, W, H);
     if (m.adentro && !completo) {

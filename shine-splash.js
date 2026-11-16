@@ -38,8 +38,11 @@ st.textContent =
   '#shine-lab .sh-titulo{letter-spacing:-.045em;font-weight:normal}' +
   '#shine-lab .sh-fito{margin-top:.3em;letter-spacing:.01em}' +
   '#shine-lab .sh-p{letter-spacing:-.09em}' +   // menos aire entre la P y la A
-  '#shine-lab .sh-linea{margin-top:.7em;letter-spacing:.02em}' +
-  '#shine-lab .sh-linea2{margin-top:.45em}' +
+  // los dos premios, lado a lado en dos columnas
+  '#shine-lab .sh-texto > .sh-premios{display:flex;align-items:flex-start;justify-content:center;gap:2.6em;margin-top:.9em}' +
+  '#shine-lab .sh-col{text-align:center;letter-spacing:.02em}' +
+  '#shine-lab .sh-col > div{white-space:nowrap;margin-top:.45em}' +
+  '#shine-lab .sh-col > .sh-rotulo{margin-top:0;margin-bottom:.3em}' +
   '#shine-lab .sh-logo{display:block}' +
   '#shine-lab .sh-firma{margin-top:1.6em;letter-spacing:.02em}' +
   '#shine-lab canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}' +
@@ -64,14 +67,14 @@ document.head.appendChild(st);
 var raiz = document.createElement('div');
 raiz.id = 'shine-lab';
 raiz.setAttribute('role', 'group');
-raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Mejor disco de rock Latin Grammy 2026. Best Latin Rock or Alternative Album Nominee, Grammys 2026. Gracias');
-raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITO<span class="sh-p">P</span>AEZ</div><div class="sh-logo"></div><div class="sh-linea">Mejor disco de rock Latin Grammy 2026</div><div class="sh-linea sh-linea2">Best Latin Rock or Alternative Album Nominee Grammys 2026</div><div class="sh-firma">Gracias</div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Pulsá para entrar</button>';
+raiz.setAttribute('aria-label', 'SHINE. Fito Páez. Ganador: Mejor disco de rock, Latin Grammy 2026. Nominado: Best Latin Rock or Alternative Album, Grammys 2026. Gracias');
+raiz.innerHTML = '<div class="sh-texto"><div class="sh-titulo">SHINE</div><div class="sh-fito">FITO<span class="sh-p">P</span>AEZ</div><div class="sh-logo"></div><div class="sh-premios"><div class="sh-col"><div class="sh-rotulo">Ganador</div><div>Mejor disco de rock</div><div>Latin Grammy 2026</div></div><div class="sh-col"><div class="sh-rotulo">Nominee</div><div>Best Latin Rock or</div><div>Alternative Album</div><div>Grammys 2026</div></div></div><div class="sh-firma">Gracias</div></div><div class="sh-pista">Mové la luz</div><button class="sh-entrar" type="button">Pulsá para entrar</button>';
 document.body.appendChild(raiz);        // encima de todo el sitio
 document.documentElement.style.overflow = 'hidden';
 var texto = raiz.querySelector('.sh-texto'), logo = raiz.querySelector('.sh-logo');
 // logo de los Grammy (gramófono), dibujado en el lienzo como una letra más
 var LOGO = new Path2D('M66.9,60.63c0-1.13-7.23-2.05-16.15-2.05s-16.15.92-16.15,2.05v3.42c0,1.13,7.24,2.04,16.15,2.04s16.14-.91,16.15-2.04C66.9,64.05,66.9,60.63,66.9,60.63ZM46.1,3.27H46.1c-1.1-.6-2.49-.66-4.12-.18-5.4,1.6-12.08,8.5-17.03,17.6-4.94,9.1-7.11,18.46-5.52,23.86.48,1.63,1.28,2.76,2.39,3.36,1.1.6,2.49.66,4.12.18,5.4-1.6,12.08-8.5,17.03-17.59,6.58-12.1,8.01-24.57,3.13-27.22M69.81,40.57c-8.32-6.32-14.26-12.41-19.39-20.15-1.05,3.7-2.67,7.68-4.85,11.7-2.12,3.9-4.58,7.43-7.14,10.35,4.66.02,9.07.33,13.58,1.01,5.52.82,10.71,1.73,14.46,3.67,1.24.64,2.31,1.56,3.16,2.65l-16.49,2.34c-.53-.91-1.39-1.51-2.37-1.51-1.6,0-2.91,1.6-2.91,3.57s1.3,3.57,2.91,3.57c1.15,0,2.14-.83,2.61-2.02l17.91-2.54c.17.68.28,1.39.28,2.13,0,2.4-.9,4.59-2.37,6.26l6.87.97c1.15-2.16,1.8-4.62,1.8-7.23,0-6.96-2.72-10.71-8.05-14.77M75.62,66.13l-24.88,3.52-24.88-3.52v19.33l24.9,4.99,24.86-4.99S75.62,66.13,75.62,66.13ZM50.76,123.36L3.77,113.11l13.88-25.65,33.09,6.08,33.1-6.08,13.88,25.65-46.95,10.25H50.76Z'), LOGO_W = 101.49, LOGO_H = 126.13;
-var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), linea = raiz.querySelector('.sh-linea'), linea2 = raiz.querySelector('.sh-linea2'), firma = raiz.querySelector('.sh-firma');
+var titulo = raiz.querySelector('.sh-titulo'), fito = raiz.querySelector('.sh-fito'), premios = raiz.querySelector('.sh-premios'), firma = raiz.querySelector('.sh-firma');
 var lienzo = document.createElement('canvas');                 // fondo y luz del cursor
 var haloLejos = document.createElement('canvas'), haloCerca = document.createElement('canvas'), nitido = document.createElement('canvas');
 haloLejos.className = 'sh-lejos'; haloCerca.className = 'sh-cerca';
@@ -129,9 +132,9 @@ function ajustar(escala) {
   fito.style.fontSize = Math.max(16, fs * 0.18) + 'px';
   // la línea del premio y «Gracias»: más chicas, sin pasar el ancho de SHINE
   var fl = Math.max(11, fs * 0.07);
-  linea.style.fontSize = linea2.style.fontSize = fl + 'px';
-  var al = Math.max(linea.getBoundingClientRect().width, linea2.getBoundingClientRect().width);
-  if (al > anchoTitulo) { fl = Math.max(9, fl * anchoTitulo / al); linea.style.fontSize = linea2.style.fontSize = fl + 'px'; }
+  premios.style.fontSize = fl + 'px';
+  var al = premios.getBoundingClientRect().width;
+  if (al > anchoTitulo) { fl = Math.max(9, fl * anchoTitulo / al); premios.style.fontSize = fl + 'px'; }
   firma.style.fontSize = fl + 'px';
   // el gramófono, antes de las líneas de los premios
   var lh = fl * 2.6;
